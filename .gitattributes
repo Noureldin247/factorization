@@ -1,3 +1,45 @@
 import random
 import math
 import time
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def extended_gcd(a, b):
+    if a == 0:
+        return b, 0, 1
+    gcd, x1, y1 = extended_gcd(b % a, a)
+    x = y1 - (b // a) * x1
+    y = x1
+    return gcd, x, y
+
+def mod_inverse(a, m):
+    gcd, x, _ = extended_gcd(a, m)
+    if gcd != 1:
+        raise ValueError("Inverse does not exist")
+    return x % m
+
+def is_probable_prime(n, k=10):
+    if n < 2:
+        return False
+    if n in {2, 3}:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    
+    s, d = 0, n - 1
+    while d % 2 == 0:
+        s += 1
+        d //= 2
+    
+    def check_composite(a):
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            return False
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                return False
+        return True
