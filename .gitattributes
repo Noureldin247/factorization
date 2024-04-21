@@ -43,3 +43,93 @@ def is_probable_prime(n, k=10):
             if x == n - 1:
                 return False
         return True
+
+    for _ in range(k):
+        a = random.randint(2, n - 2)
+        if check_composite(a):
+            return False
+    return True
+
+def generate_prime(bits):
+    while True:
+        p = random.randint(2**(bits - 1), 2**bits - 1)
+        if is_probable_prime(p):
+            return p
+
+def generate_rsa_keys(bits):
+    if bits not in {8, 16}:
+        raise ValueError("Key length must be either 8 or 16 bits")
+    
+    p = generate_prime(bits // 2)
+    q = generate_prime(bits // 2)
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    
+    e = random.randint(2, phi - 1)
+    while gcd(e, phi) != 1:
+        e = random.randint(2, phi - 1)
+    
+    d = mod_inverse(e, phi)
+    
+    return (n, e), (n, d)
+
+def encrypt(message, public_key):
+    n, e = public_key
+    return pow(message, e, n)
+
+def decrypt(ciphertext, private_key):
+    n, d = private_key
+    return pow(ciphertext, d, n)
+
+def factorize_modulus(n):
+    start_time = time.perf_counter()
+    for i in range(2, int(math.sqrt(n)) + 1):
+        if n % i == 0:
+            p, q = i, n // i
+            end_time = time.perf_counter()
+            runtime = end_time - start_time
+            return p, q, runtime
+    end_time = time.perf_counter()
+    runtime = end_time - start_time
+    return None, None, runtime
+
+def main_factorization():
+    print("RSA Cryptography Program (Factorization Approach)")
+    while True:
+        print("1. Generate RSA Keys and Encrypt/Decrypt Message")
+        print("2. Exit")
+        
+        choice = input("Enter choice: ")
+        
+        if choice == "1":
+            try:
+                bits = int(input("Enter key length (8 or 16 bits): "))
+                public_key, private_key = generate_rsa_keys(bits)
+                
+                print(f"Public Key: {public_key}")
+                print(f"Private Key: {private_key}")
+                
+                message = input("Enter message to encrypt: ")
+                message_ascii = [ord(char) for char in message]
+                encrypted_message = [encrypt(code, public_key) for code in message_ascii]
+                
+                print(f"Encrypted Message: {encrypted_message}")
+                
+                decrypted_message = "".join([chr(decrypt(code, private_key)) for code in encrypted_message])
+                print(f"Decrypted Message: {decrypted_message}")
+                
+                _, _, runtime = factorize_modulus(public_key[0])
+                print(f"Modulus Factorization Runtime: {runtime:.6f} seconds")
+                
+            except ValueError as e:
+                print(f"Error: {e}")
+        
+        elif choice == "2":
+            print("Exiting program.")
+            break
+        
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main_factorization()
